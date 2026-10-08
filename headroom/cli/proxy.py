@@ -5,7 +5,7 @@ import os
 import platform
 import sys
 import warnings
-from importlib import import_module
+from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -49,8 +49,9 @@ def ensure_proxy_dependencies() -> None:
         required_modules.append("orjson")
 
     try:
-        for module in required_modules:
-            import_module(module)
+        missing = next((module for module in required_modules if find_spec(module) is None), None)
+        if missing is not None:
+            raise ImportError(f"No module named '{missing}'")
     except ImportError as e:
         click.secho(
             "Error: Proxy dependencies not installed. Run: pip install headroom-ai[proxy]",
